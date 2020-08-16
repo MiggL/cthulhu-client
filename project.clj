@@ -1,4 +1,4 @@
-(defproject cthulu-client "0.1.0-SNAPSHOT"
+(defproject cthulu-client "0.1.0"
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.773"
                   :exclusions [com.google.javascript/closure-compiler-unshaded
