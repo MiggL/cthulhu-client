@@ -113,17 +113,19 @@
                         :display        "flex"
                         :flex-direction "column"
                         :align-items    "center"
-                        :color "#e4e4e4"}}
-          [:div {:style {:border-radius    6
-                         :height           card-height
-                         :width            (- card-width 2) ; the border property adds 2px
-                         :display          "flex"
-                         :justify-content  "center"
-                         :align-items      "center"
-                         :color            "black"
-                         :background-color "grey"
-                         :border           "1px solid black"}}
-           [:h4 (name entity)]]
+                        :color          "#e4e4e4"}}
+          [:div {:style {:border-radius       6
+                         :height              card-height
+                         :width               (- card-width 2) ; the border property adds 2px
+                         :display             "flex"
+                         :justify-content     "center"
+                         :align-items         "center"
+                         :color               "black"
+                         :background-color    "grey"
+                         :background-image    (str "url(\"img/" (name entity) ".png\")")
+                         :background-position "center"
+                         :background-size     "cover"
+                         :border              "1px solid black"}}]
           [:p (count cards-of-entity)]])]
       [:div {:style {:min-height 1
                      :height     1
