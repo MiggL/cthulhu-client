@@ -17,7 +17,9 @@
 (rf/reg-event-db
  ::set-game-state
  (fn [db [_ game-state]]
-   (assoc db :game-state game-state)))
+   (-> db
+       (assoc :game-state game-state)
+       (assoc :animate-flip-card [nil nil]))))
 
 (rf/reg-event-db
  ::end-animate-card-flip
