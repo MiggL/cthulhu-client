@@ -13,7 +13,7 @@
         my-turn?   (rf/subscribe [::subs/my-turn?])
         my-id      (rf/subscribe [::subs/client-id])
         [flip-card-id transform-val] @(rf/subscribe [::subs/animate-flip-card])
-        clickable? (and @my-turn? (not= owner-id @my-id))
+        clickable? (and @my-turn? (nil? flip-card-id) (not= owner-id @my-id))
         card-div   (if clickable? :div.clickable-card :div)]
     [:div {:style {:background-color    "#505050" 
                    :background-image    (when-not (= entity :unknown) (str "url(\"img/" (name entity) ".png\")"))
@@ -69,6 +69,7 @@
   (let [revealed-cards& (rf/subscribe [::subs/revealed-cards])
         players& (rf/subscribe [::subs/players])
         actions-left& (rf/subscribe [::subs/actions-left-for-current-round])
+        waiting?& (rf/subscribe [::subs/waiting?])
         log& (rf/subscribe [::subs/log])
         winners @(rf/subscribe [::subs/winners])
         current-round @(rf/subscribe [::subs/current-round])
@@ -90,7 +91,8 @@
                     :flex-direction  "column"
                     :justify-content "center"
                     :align-items     "center"}}
-      (if winners
+      (if-not winners
+        [:p "actions left: " @actions-left&]
         [:div {:style {:margin-top     -60
                        :margin-bottom  12
                        :display        "flex"
@@ -100,12 +102,20 @@
                                      :investigators "turquoise"
                                      :cultists "red")}}
                (capitalize (name winners)) " win!"]
-         [:input {:type     "button"
-                  :on-click #(rf/dispatch [::events/start-game])
-                  :value    "New Game (same players)"
-                  :style {:display "block"
-                          :z-index 10}}]]
-        [:p "actions left: " @actions-left&])
+         [:div {:style {:align-self   "stretch"
+                        :display "flex"
+                        :justify-content "space-between"}}
+          [:input {:type     "button"
+                   :on-click #(rf/dispatch [::events/start-game])
+                   :value    "same players"
+                   :disabled @waiting?&
+                   :style {:display "block" :z-index 10 :cursor (when-not @waiting?& "pointer")}}]
+          "New game?"
+          [:input {:type     "button"
+                   :on-click #(rf/dispatch [::events/clear-game])
+                   :value    "new players"
+                   :disabled @waiting?&
+                   :style {:display "block" :z-index 10 :cursor (when-not @waiting?& "pointer")}}]]])
       [:div {:style {:display "flex"}}
        (for [[entity cards-of-entity] grouped-revealed-cards]
          ^{:key entity}

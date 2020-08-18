@@ -9,6 +9,6 @@
                         :player-id-in-turn nil
                         :round             0}
    :log                []
-   :animate-flip-card  [nil nil] ; [card-id css-transform-value]
+   :animate-flip-card  [] ; [card-id css-transform-value]
    :websocket          nil
    :waiting?           false})

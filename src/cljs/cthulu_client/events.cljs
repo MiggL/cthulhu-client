@@ -2,7 +2,8 @@
   (:require
    [re-frame.core :as rf]
    [cthulu-client.db :as db]
-   [cthulu-client.effects]))
+   [cthulu-client.effects]
+   [cthulu-client.event-helpers :as helpers]))
 
 (rf/reg-event-db
  ::initialize-db
@@ -19,7 +20,7 @@
  (fn [db [_ game-state]]
    (-> db
        (assoc :game-state game-state)
-       (assoc :animate-flip-card [nil nil]))))
+       (assoc :animate-flip-card []))))
 
 (rf/reg-event-db
  ::end-animate-card-flip
@@ -51,25 +52,29 @@
  (fn [{:keys [db]} [_ data]]
    (condp #(contains? %2 %1) data
      :game-state
-     {:db       (-> db
-                    (assoc :waiting? false)
-                    ;(assoc :game-state (:game-state data))
-                    (assoc :log (:action-log data))
-                    (assoc :client-id (or (:client-id data) (:client-id db))))
-      :dispatch (let [last-action (last (:action-log data))]
-                  [::start-animate-card-flip
-                   (:target-player-id last-action)
-                   (:revealed-card-id last-action)
-                   (:revealed-card-entity last-action)])
-      :timeout {:event [::set-game-state (:game-state data)]
-                :time  (if (and (get-in db [:game-state :player-id-in-turn])
-                                (= (:log db) (drop-last (:action-log data))))
-                         2500
-                         0)}}
+     (let [{:keys [game-state action-log]} data
+           animate? (and (get-in db [:game-state :player-id-in-turn])
+                         (= (:log db) (drop-last action-log)))
+           new-db (-> db
+                      (assoc :waiting? false)
+                      (assoc :log action-log)
+                      (assoc :client-id (or (:client-id data) (:client-id db))))]
+       (if-not animate?
+         {:db (assoc new-db :game-state game-state)}
+         {:db new-db
+          :dispatch (let [{:keys [target-player-id
+                                  revealed-card-id
+                                  revealed-card-entity]} (last action-log)]
+                      [::start-animate-card-flip target-player-id revealed-card-id revealed-card-entity])
+          
+          :timeout {:event [::set-game-state game-state]
+                    :time  3000}}))
      
      :client-id
      {:db (-> db
+              (assoc :waiting? false)
               (assoc :client-id (:client-id data))
+              (helpers/clear-game-state)
               (assoc-in [:game-state :players] (:players data)))})))
 
 (rf/reg-event-db
@@ -98,9 +103,17 @@
                        :message {:type "start-game"}}})))
 
 (rf/reg-event-fx
+ ::clear-game
+ (fn [{:keys [db]} _]
+   (when-not (:waiting? db)
+     {:db (assoc db :waiting? true)
+      :websocket-send {:socket (:websocket db)
+                       :message {:type "clear-game"}}})))
+
+(rf/reg-event-fx
  ::reveal-card
  (fn [{:keys [db]} [_ owner-id card-id]]
-   (when-not (:waiting? db)
+   (when-not (or (:waiting? db) (seq (:animate-flip-card db)))
      {:db (assoc db :waiting? true)
       :websocket-send {:socket (:websocket db)
                        :message {:type    "reveal-card"
