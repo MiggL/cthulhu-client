@@ -16,10 +16,11 @@
    (assoc db :websocket websocket)))
 
 (rf/reg-event-db
- ::set-game-state
- (fn [db [_ game-state]]
+ ::set-game-state-and-log
+ (fn [db [_ game-state log]]
    (-> db
        (assoc :game-state game-state)
+       (assoc :log log)
        (assoc :animate-flip-card []))))
 
 (rf/reg-event-db
@@ -43,9 +44,11 @@
 (rf/reg-event-fx
  ::start-animate-card-flip
  (fn [{:keys [db]} [_ target-player-id card-id card-entity]]
-   {:db (assoc db :animate-flip-card [card-id "rotateY(90deg)"])
-    :timeout {:event [::end-animate-card-flip target-player-id card-id card-entity]
-              :time  500}}))
+   (if (= target-player-id (:client-id db))
+     {:db (assoc db :animate-flip-card [card-id "translate(0px, -32px)"])}
+     {:db (assoc db :animate-flip-card [card-id "rotateY(90deg)"])
+      :timeout {:event [::end-animate-card-flip target-player-id card-id card-entity]
+                :time  500}})))
 
 (rf/reg-event-fx
  ::receive-websocket-message
@@ -57,17 +60,18 @@
                          (= (:log db) (drop-last action-log)))
            new-db (-> db
                       (assoc :waiting? false)
-                      (assoc :log action-log)
                       (assoc :client-id (or (:client-id data) (:client-id db))))]
        (if-not animate?
-         {:db (assoc new-db :game-state game-state)}
+         {:db (-> new-db
+                  (assoc :game-state game-state)
+                  (assoc :log action-log))}
          {:db new-db
           :dispatch (let [{:keys [target-player-id
                                   revealed-card-id
                                   revealed-card-entity]} (last action-log)]
                       [::start-animate-card-flip target-player-id revealed-card-id revealed-card-entity])
           
-          :timeout {:event [::set-game-state game-state]
+          :timeout {:event [::set-game-state-and-log game-state action-log]
                     :time  3000}}))
      
      :client-id
