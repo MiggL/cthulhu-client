@@ -8,34 +8,53 @@
 (def card-width 96)
 (def card-height 128)
 
+(def power-descriptions
+  {:insanitys-grasp "If this card in unrevealed in front of you, you cannot communicate."})
+
+(def power-colors
+  {:insanitys-grasp "green"})
+
+(defn object-of-power?
+  [entity]
+  (contains? power-descriptions entity))
+
 (defn card-view [card owner-id]
   (let [entity     (:entity card)
         my-turn?   (rf/subscribe [::subs/my-turn?])
         my-id      (rf/subscribe [::subs/client-id])
         [flip-card-id transform-val] @(rf/subscribe [::subs/animate-flip-card])
         clickable? (and @my-turn? (nil? flip-card-id) (not= owner-id @my-id))
-        card-div   (if clickable? :div.clickable-card :div)]
+        card-div   (if clickable? :div.clickable-card :div)
+        image-url  (str "url(\"img/"
+                        (if (object-of-power? entity) "futile" (name entity))
+                        ".png\")")]
     [:div {:style {:background-color    "#505050" 
-                   :background-image    (when-not (= entity :unknown) (str "url(\"img/" (name entity) ".png\")"))
+                   :background-image    (when-not (= entity :unknown) image-url)
                    :background-position "center"
                    :background-size     "cover"
+                   ;:position "fixed"
                    :margin-left         -32
                    :border-radius       6
                    :transition          "transform .5s ease-in-out"
                    :transform           (when (= flip-card-id (:id card)) transform-val)}}
-     [card-div {:on-click #(when clickable? (rf/dispatch [::events/reveal-card owner-id (:id card)]))
+     [card-div {:title    (power-descriptions entity)
+                :on-click #(when clickable? (rf/dispatch [::events/reveal-card owner-id (:id card)]))
                 :style    {:border-radius   6
                            :height          card-height
                            :width           (- card-width 2) ; the border property adds 2px
                                  ;:margin-left     -32
                            :display         "flex"
                            :flex-direction  "column"
-                           :justify-content "center"
+                           :justify-content "space-between"
                            :align-items     "center"
                                 ;:background-color (if (= entity :unknown) "#505050" "grey")
                            :color           "black"
-                           :border          "1px solid black"}}
-      [:h4 (when (= flip-card-id (:id card)) "🔦")]
+                           :border          "1px solid black"
+                           :text-align      "center"}}
+      (when (object-of-power? entity)
+        [:div {:style {:display "contents" :text-shadow "1px 1px white"}}
+         [:h6 {:style {:margin 8 :font-weight "lighter" :color (power-colors entity)}} (.toUpperCase (clojure.string/replace (name entity) #"-" " "))]
+         [:div {:style {:padding "0px 8px 8px" :font-size 12}} (power-descriptions entity)]])
       ]]))
 
 (defn hand-view [cards owner-id]
