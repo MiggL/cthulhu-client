@@ -15,9 +15,9 @@
    :evil-presence   "Return all your unrevealed cards to the reshuffle pile."})
 
 (def power-colors
-  {:insanitys-grasp "green"
+  {:insanitys-grasp "#006000"
    :paranoia        "darkblue"
-   :evil-presence   "red"})
+   :evil-presence   "#CC0000"})
 
 (defn object-of-power?
   [entity]
@@ -51,9 +51,9 @@
                                                         -1px 0px 0 white,
                                                         0px 1px 0 white,
                                                         0px -1px white"}}
-        [:h5 {:style {:margin 5 :font-weight "lighter" :color (power-colors entity)}}
+        [:h5 {:style {:margin 5 :color (power-colors entity)}}
          (.toUpperCase (clojure.string/replace (name entity) #"-" " "))]
-        [:div {:style {:padding   "0px 4px 8px" :font-size 12}}
+        [:div {:style {:padding "0px 4px 8px" :font-size 11 :font-weight "bold"}}
          (power-descriptions entity)]])]))
 
 (defn player-card-view []
