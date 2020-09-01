@@ -7,64 +7,81 @@
 
 (def card-width 96)
 (def card-height 128)
+(def card-border-radius 6)
 
 (def power-descriptions
-  {:insanitys-grasp "If this card in unrevealed in front of you, you cannot communicate."})
+  {:insanitys-grasp "If this card is unrevealed in front of you, you cannot communicate."
+   :paranoia        "Control the flashlight for the rest of this round."
+   :evil-presence   "Return all your unrevealed cards to the reshuffle pile."})
 
 (def power-colors
-  {:insanitys-grasp "green"})
+  {:insanitys-grasp "green"
+   :paranoia        "darkblue"
+   :evil-presence   "red"})
 
 (defn object-of-power?
   [entity]
   (contains? power-descriptions entity))
 
-(defn card-view [card owner-id]
-  (let [entity     (:entity card)
-        my-turn?   (rf/subscribe [::subs/my-turn?])
-        my-id      (rf/subscribe [::subs/client-id])
-        [flip-card-id transform-val] @(rf/subscribe [::subs/animate-flip-card])
-        clickable? (and @my-turn? (nil? flip-card-id) (not= owner-id @my-id))
-        card-div   (if clickable? :div.clickable-card :div)
-        image-url  (str "url(\"img/"
-                        (if (object-of-power? entity) "futile" (name entity))
-                        ".png\")")]
-    [:div {:style {:background-color    "#505050" 
-                   :background-image    (when-not (= entity :unknown) image-url)
-                   :background-position "center"
-                   :background-size     "cover"
-                   ;:position "fixed"
-                   :margin-left         -32
-                   :border-radius       6
-                   :transition          "transform .5s ease-in-out"
-                   :transform           (when (= flip-card-id (:id card)) transform-val)}}
-     [card-div {:title    (power-descriptions entity)
-                :on-click #(when clickable? (rf/dispatch [::events/reveal-card owner-id (:id card)]))
-                :style    {:border-radius   6
-                           :height          card-height
-                           :width           (- card-width 2) ; the border property adds 2px
-                                 ;:margin-left     -32
-                           :display         "flex"
-                           :flex-direction  "column"
-                           :justify-content "space-between"
-                           :align-items     "center"
-                                ;:background-color (if (= entity :unknown) "#505050" "grey")
-                           :color           "black"
-                           :border          "1px solid black"
-                           :text-align      "center"}}
-      (when (object-of-power? entity)
-        [:div {:style {:display "contents" :text-shadow "1px 1px white"}}
-         [:h6 {:style {:margin 8 :font-weight "lighter" :color (power-colors entity)}} (.toUpperCase (clojure.string/replace (name entity) #"-" " "))]
-         [:div {:style {:padding "0px 8px 8px" :font-size 12}} (power-descriptions entity)]])
-      ]]))
+(defn card-view [entity clickable?]
+  (let [card-div (if clickable? :div.clickable-card :div)
+        image-url (str "url(\"img/"
+                       (if (object-of-power? entity) "futile" (name entity))
+                       ".png\")")]
+    [card-div {:title (power-descriptions entity)
+               :style {:border-radius       card-border-radius
+                       :background-image    (when-not (= entity :unknown) image-url)
+                       :background-position "center"
+                       :background-size     "cover"
+                       :width               card-width
+                       :height              card-height
+                       :display             "flex"
+                       :flex-direction      "column"
+                       :justify-content     "space-between"
+                       :align-items         "center"
+                       :color               "black"
+                       :border              "1px solid black"
+                       :text-align          "center"}}
+     (when (object-of-power? entity)
+       [:div {:style {:display "contents" :text-shadow "1px 1px 0 white,
+                                                        1px -1px 0 white,
+                                                        -1px 1px 0 white,
+                                                        -1px -1px 0 white,
+                                                        1px 0px 0 white,
+                                                        -1px 0px 0 white,
+                                                        0px 1px 0 white,
+                                                        0px -1px white"}}
+        [:h5 {:style {:margin 5 :font-weight "lighter" :color (power-colors entity)}}
+         (.toUpperCase (clojure.string/replace (name entity) #"-" " "))]
+        [:div {:style {:padding   "0px 4px 8px" :font-size 12}}
+         (power-descriptions entity)]])]))
 
-(defn hand-view [cards owner-id]
-  [:div {:style {:display          "flex"
-                 :justify-content  "center"
-                 :flex-direction   "row-reverse"
-                 :align-items      "center"
-                 :padding-left     32}}
-   (for [card cards]
-     ^{:key (:id card)} [card-view card owner-id])])
+(defn player-card-view []
+  (let [my-turn?       (rf/subscribe [::subs/my-turn?])
+        animation-data (rf/subscribe [::subs/animate-flip-card])]
+    (fn [card owner-id my-card?]
+      (let [entity                       (:entity card)
+            [flip-card-id transform-val] @animation-data
+            clickable?                   (and @my-turn? (nil? flip-card-id) (not my-card?))]
+        [:div {:on-click #(when clickable? (rf/dispatch [::events/reveal-card owner-id (:id card)]))
+               :style {:border-radius    card-border-radius
+                       :background-color "#505050"
+                       :margin-left      (if my-card? 0 -32)
+                       :transition       "transform .5s ease-in-out"
+                       :transform        (when (= flip-card-id (:id card)) transform-val)}}
+         [card-view entity clickable?]]))))
+
+(defn hand-view []
+  (let [my-id (rf/subscribe [::subs/client-id])]
+    (fn [cards owner-id]
+      (let [my-cards? (= owner-id @my-id)]
+        [:div {:style {:display          "flex"
+                       :justify-content  "center"
+                       :flex-direction   "row-reverse"
+                       :align-items      "center"
+                       :padding-left     (if my-cards? 0 32)}}
+         (for [card cards]
+           ^{:key (:id card)} [player-card-view card owner-id my-cards?])]))))
 
 (defn player-view [{name  :name
                     id    :id
@@ -143,18 +160,7 @@
                         :flex-direction "column"
                         :align-items    "center"
                         :color          "#e4e4e4"}}
-          [:div {:style {:border-radius       6
-                         :height              card-height
-                         :width               (- card-width 2) ; the border property adds 2px
-                         :display             "flex"
-                         :justify-content     "center"
-                         :align-items         "center"
-                         :color               "black"
-                         :background-color    "grey"
-                         :background-image    (str "url(\"img/" (name entity) ".png\")")
-                         :background-position "center"
-                         :background-size     "cover"
-                         :border              "1px solid black"}}]
+          [card-view entity false]
           [:p (count cards-of-entity)]])]
       [:div {:style {:min-height 1
                      :height     1
@@ -278,7 +284,7 @@
        :else
        [game-board])]))
 
-(comment @re-frame.db/app-db)
+;(comment @re-frame.db/app-db)
 (comment (rf/dispatch [::events/set-players [{:name  "Miguel"
                                               :cards [:sten :Cthulu :sten :unknown]}
                                              {:name  "Sebastian"
