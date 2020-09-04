@@ -10,16 +10,20 @@
 (def card-border-radius 6)
 
 (def power-descriptions
-  {:insanitys-grasp "If this card is unrevealed in front of you, you cannot communicate."
-   :paranoia        "Control the flashlight for the rest of this round."
-   :private-eye     "Secretly reveal your role to the investigator."
-   :evil-presence   "Return all your unrevealed cards to the reshuffle pile."})
+  {:insanitys-grasp  "If this card is unrevealed in front of you, you cannot communicate."
+   :mirage           "Return a previously discovered elder sign to the reshuffle pile."
+   :prescient-vision "Reveal a card, flip it back over."
+   :paranoia         "Control the flashlight for the rest of this round."
+   :private-eye      "Secretly reveal your role to the investigator."
+   :evil-presence    "Return all your unrevealed cards to the reshuffle pile."})
 
 (def power-colors
-  {:insanitys-grasp "#006000"
-   :paranoia        "darkblue"
-   :private-eye     "#AA7700"
-   :evil-presence   "#CC0000"})
+  {:insanitys-grasp  "#006000"
+   :mirage           "#30A89C"
+   :prescient-vision "#007FA0"
+   :paranoia         "darkblue"
+   :private-eye      "#AA7700"
+   :evil-presence    "#CC0000"})
 
 (defn object-of-power?
   [entity]
