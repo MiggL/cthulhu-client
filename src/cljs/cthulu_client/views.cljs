@@ -12,11 +12,13 @@
 (def power-descriptions
   {:insanitys-grasp "If this card is unrevealed in front of you, you cannot communicate."
    :paranoia        "Control the flashlight for the rest of this round."
+   :private-eye     "Secretly reveal your role to the investigator."
    :evil-presence   "Return all your unrevealed cards to the reshuffle pile."})
 
 (def power-colors
   {:insanitys-grasp "#006000"
    :paranoia        "darkblue"
+   :private-eye     "#AA7700"
    :evil-presence   "#CC0000"})
 
 (defn object-of-power?
