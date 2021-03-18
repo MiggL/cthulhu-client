@@ -4,7 +4,7 @@ A [re-frame](https://github.com/day8/re-frame) application designed to provide a
 
 To be used with the [backend](https://github.com/MiggL/cthulhu-server) and your favorite voice chat software.
 
-https://user-images.githubusercontent.com/13435195/111704825-0bab6b00-8840-11eb-988e-2f8bf1aa6ae1.mp4
+![teaser_github_ezgif_opt_half](https://user-images.githubusercontent.com/13435195/111706809-39de7a00-8843-11eb-9a1e-9426c68389f5.gif)
 
 
 
