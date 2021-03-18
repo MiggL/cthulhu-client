@@ -2,7 +2,11 @@
 
 A [re-frame](https://github.com/day8/re-frame) application designed to provide an online version of the social deduction game *[Don't Mess with Cthulhu](https://www.boardgamegeek.com/boardgame/253786/dont-mess-cthulhu-deluxe)*.
 
-To be used with the [backend](https://github.com/MiggL/cthulhu-server).
+To be used with the [backend](https://github.com/MiggL/cthulhu-server) and your favorite voice chat software.
+
+https://user-images.githubusercontent.com/13435195/111704825-0bab6b00-8840-11eb-988e-2f8bf1aa6ae1.mp4
+
+
 
 ## Getting Started
 
