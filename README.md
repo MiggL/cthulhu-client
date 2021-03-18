@@ -1,7 +1,8 @@
-# cthulu-client
+# *Don't Mess with Cthulhu* Frontend
 
-A [re-frame](https://github.com/day8/re-frame) application designed to ... well, that part is up to
-you.
+A [re-frame](https://github.com/day8/re-frame) application designed to provide an online version of the social deduction game *[Don't Mess with Cthulhu](https://www.boardgamegeek.com/boardgame/253786/dont-mess-cthulhu-deluxe)*.
+
+To be used with the [backend](https://github.com/MiggL/cthulhu-server).
 
 ## Getting Started
 
